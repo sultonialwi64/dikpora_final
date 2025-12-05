@@ -1,8 +1,35 @@
 <x-guest-layout>
+    
+<div class="text-center mt-8 mb-10">
+    <h1 class="text-2xl font-extrabold tracking-wide" style="font-family: 'Poppins', sans-serif;">
+        <!-- Warna Kontras dengan shadow -->
+        <span class="text-blue-500 dark:text-yellow-500 text-shadow-lg">
+            Dinas Pendidikan Pemuda dan Olahraga Kota Yogyakarta
+        </span>
+    </h1>
+    <br>
+</div>
+
+
+    <!-- Tambahkan Logo -->
+    <div class="flex justify-center mb-6">
+        <img src="{{ asset('images/my-logo.webp') }}" alt="Logo" class="h-16 mx-auto">
+    </div>
+
+ 
+    <div class="text-center mt-8 mb-10">
+        <h1 class="text-xl font-extrabold text-gray-700 dark:text-gray-100 tracking-wide">
+           
+            <span class="text-4xl">Sistem Peminjaman Ruang</span>
+        </h1>
+     
+    </div>
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
+    <!-- Form Login -->
+    <form method="POST" action="{{ route('login') }}" class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 max-w-md mx-auto">
         @csrf
 
         <!-- Email Address -->
@@ -32,14 +59,13 @@
             </label>
         </div>
 
+        <!-- Actions -->
         <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
                 <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
-
-           
 
             <x-primary-button class="ms-3">
                 {{ __('Log in') }}

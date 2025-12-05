@@ -5,7 +5,7 @@
                 <script>
                     document.write(new Date().getFullYear());
                 </script> - developed by
-                <b><a href="" target="_blank">Sidikdik</a></b>
+                <b><a href="" target="_blank">Kami</a></b>
             </span>
         </div>
     </div>

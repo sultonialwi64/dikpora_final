@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
+
 <body>
     @include('partials.admin-sidebar')
     <script src="assets/static/js/initTheme.js"></script>
@@ -45,28 +47,33 @@
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
                                 <h5 class="card-title mb-2">Histori Peminjaman</h5>
                                 <div class="d-flex flex-wrap align-items-center">
-                                    <!-- Filter Bulan dan Tahun -->
-                                    <form method="get" action="{{ route('history') }}" class="d-flex align-items-center mr-3 mb-2">
-                                        <select name="month" class="form-control mr-2">
-                                            @foreach(range(1, 12) as $m)
-                                                <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
-                                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                    <!-- Filter Tanggal -->
+                                    <form method="get" action="{{ route('history') }}"
+                                        class="d-flex align-items-center mr-3 mb-2">
+                                        <input type="date" name="start_date" class="form-control mr-2"
+                                            value="{{ request('start_date') }}">
+                                        <input type="date" name="end_date" class="form-control mr-2"
+                                            value="{{ request('end_date') }}">
                                         <button type="submit" class="btn btn-primary">Filter</button>
                                     </form>
-                                    <a href="{{ route('download.history', ['month' => $m]) }}" class="btn btn-primary mb-2">
+
+
+
+                                    <!-- Tombol Download PDF -->
+                                    <a href="{{ route('download.history', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                                        class="btn btn-primary mb-2">
                                         Download Laporan (.pdf)
-                                    </a>                                    
+                                    </a>
                                 </div>
-                            </div>                            
-                        </div>                        
+                            </div>
+                        </div>
+
                         <div class="card-body">
                             <!-- Tabel Daftar Peminjaman -->
                             <div class="table-responsive">
                                 <table class="table table-striped" id="bookingsTable">
                                     <thead>
+   
                                         <tr>
                                             <th>No.</th>
                                             <th>Nama Ruang</th>
@@ -77,7 +84,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($bookings as $index => $booking)
+                                        @forelse ($bookings as $index => $booking)
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
                                                 <td>{{ $booking->room->name }}</td>
@@ -86,10 +93,16 @@
                                                 <td>{{ $booking->booked_by }}</td>
                                                 <td>{{ ucfirst($booking->status) }}</td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center">Tidak ada data peminjaman untuk filter
+                                                    ini.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
+
                                 </table>
-                            </div>                            
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -122,4 +135,5 @@
     <script src="assets/static/js/initTheme.js"></script>
     <script src="assets/compiled/js/app.js"></script>
 </body>
+
 </html>

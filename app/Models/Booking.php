@@ -9,7 +9,20 @@ class Booking extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['room_id', 'booked_by', 'booking_date', 'user_email', 'jam_awal', 'jam_akhir','jumlah_peserta', 'agenda', 'penanggung_jawab', 'status'];
+    protected $fillable = [
+        'room_id',
+        'booked_by',
+        'user_email',
+        'booking_date',
+        'jam_awal',
+        'jam_akhir',
+        'jumlah_peserta',
+        'agenda',
+        'penanggung_jawab',
+        'status',
+        'alasan' // Tambahkan ini
+    ];
+
 
     // Relasi ke model Room
     public function room()

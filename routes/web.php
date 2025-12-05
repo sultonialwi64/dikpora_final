@@ -12,10 +12,16 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
+Route::get('/history', [BookingController::class, 'history'])->name('history');
+
+
 // Redirect after login (dashboard for authenticated users)
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/history', [BookingController::class, 'index'])->name('history');
+Route::get('/history/download', [BookingController::class, 'downloadHistory'])->name('download.history');
 
 // Routes for users and admins
 Route::middleware(['auth', 'isAdmin'])->group(function () {
@@ -28,7 +34,7 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::get('/admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index'); // View all bookings
     Route::post('/admin/bookings/{id}/approve', [BookingController::class, 'approve'])->name('admin.bookings.approve'); // Approve booking
     Route::post('/admin/bookings/{id}/reject', [BookingController::class, 'reject'])->name('admin.bookings.reject'); // Reject booking
-    Route::post('/addUsers', [RegisteredUserController::class,'saveUser'])->name('addUsers');
+    Route::post('/addUsers', [RegisteredUserController::class, 'saveUser'])->name('addUsers');
 
     Route::get('/admin-jadwal', [BookingController::class, 'jadwalAdmin'])->name('jadwal.admin');
     Route::get('/admin-notifikasi', [BookingController::class, 'getNotifAdmin'])->name('notifikasi.admin');
@@ -62,4 +68,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/get-all-agenda', [CalendarController::class, 'getAllAgenda'])->name('calendar.getAllAgenda');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

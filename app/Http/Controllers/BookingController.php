@@ -47,15 +47,39 @@ class BookingController extends Controller
             'booked_by' => $request->booked_by,
             'user_email' => $request->user_email,
             'booking_date' => $request->booking_date,
-            'jam_awal' => $request->jam_awal, 
-            'jam_akhir' => $request->jam_akhir, 
-            'jumlah_peserta' => $request->jumlah_peserta, 
-            'agenda' => $request->agenda, 
-            'penanggung_jawab' => $request->penanggung_jawab, 
+            'jam_awal' => $request->jam_awal,
+            'jam_akhir' => $request->jam_akhir,
+            'jumlah_peserta' => $request->jumlah_peserta,
+            'agenda' => $request->agenda,
+            'penanggung_jawab' => $request->penanggung_jawab,
         ]);
 
         return redirect('/pengajuan')->with('success', 'Booking berhasil diajukan!');
     }
+
+    public function history(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Validasi format tanggal
+        if ($startDate && $endDate) {
+            $startDate = Carbon::parse($startDate)->format('Y-m-d');
+            $endDate = Carbon::parse($endDate)->format('Y-m-d');
+        }
+
+        // Query data berdasarkan filter tanggal
+        $bookings = Booking::with('room')
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                return $query->whereBetween('booking_date', [$startDate, $endDate]);
+            })
+            ->orderBy('booking_date', 'asc')
+            ->get();
+
+        return view('history', compact('bookings'));
+    }
+
+
 
     public function index()
     {
@@ -203,27 +227,27 @@ class BookingController extends Controller
     {
         // Mendapatkan user yang sedang login
         $user = Auth::user();
-    
+
         if ($user instanceof \App\Models\User) {
             // Ambil nama user yang sedang login
             $userName = $user->name;
-    
+
             // Ambil peminjaman ruang berdasarkan nama user
             $bookings = Booking::where('booked_by', $userName)
                 ->orderBy('updated_at', 'desc')
                 ->get();
-    
+
             // Format data peminjaman sesuai kategori status
             $formattedBookings = $bookings->map(function ($booking) {
                 $booking->formatted_booking_date = \Carbon\Carbon::parse($booking->booking_date)
                     ->translatedFormat('d F Y'); // Format tanggal
                 return $booking;
             });
-    
+
             // Kirim data peminjaman ke view
             return view('rooms.notifikasi', compact('formattedBookings'));
         }
-    
+
         // Jika user tidak login atau invalid
         return response()->json([
             'status' => 'error',
@@ -262,39 +286,45 @@ class BookingController extends Controller
 
     public function downloadHistory(Request $request)
     {
-        // Ambil bulan dan tahun yang dipilih, lalu konversi $month ke integer
-        $month = intval($request->input('month', \Carbon\Carbon::now()->month));
-        $year = \Carbon\Carbon::now()->year; // Tahun langsung diambil dari sistem
-            
-        // Ambil peminjaman ruang dengan status "accepted" dan bulan yang dipilih
-        $bookings = Booking::where('status', 'accepted')
-            ->whereYear('booking_date', $year) // Filter tahun
-            ->whereMonth('booking_date', $month) // Filter bulan
-            ->get();
-    
-        // Format data peminjaman sesuai kategori status
-        $formattedBookings = $bookings->map(function ($booking) {
-            $booking->formatted_booking_date = \Carbon\Carbon::parse($booking->booking_date)
-                ->translatedFormat('d F Y'); // Format tanggal
-            return $booking;
-        });
-    
-        // Ambil nama bulan dalam format teks (Indonesia)
-        $monthName = \Carbon\Carbon::create()->month($month)->translatedFormat('F');
-    
-        // Render view ke dalam format PDF
-        $pdf = Pdf::loadView('export-history', compact('formattedBookings', 'month', 'year')); // Kirim $month dan $year ke view
-        return $pdf->download("history-peminjaman-{$monthName}-{$year}.pdf"); // Gunakan nama bulan dalam file
-    }
-    
-    public function updateStatus(Request $request, $id)
-    {
-        $booking = Booking::findOrFail($id);
-        $booking->status = $request->status; // "accepted" atau "rejected"
-        $booking->save();
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        return response()->json(['message' => 'Status berhasil diperbarui.']);
+        $query = Booking::query();
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('booking_date', [$startDate, $endDate]);
+        }
+
+        $bookings = $query->with('room')->orderBy('booking_date', 'desc')->get();
+
+        // Generate PDF
+        $pdf = Pdf::loadView('history.pdf', [
+            'bookings' => $bookings,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        return $pdf->download('laporan-peminjaman.pdf');
     }
+
+
+    public function updateStatus(Request $request, $id)
+{
+    $booking = Booking::findOrFail($id);
+
+    $request->validate([
+        'status' => 'required|in:accepted,rejected',
+        'alasan' => 'required_if:status,rejected|string|max:255' // Alasan wajib jika ditolak
+    ]);
+
+    $booking->update([
+        'status' => $request->status,
+        'alasan' => $request->status == 'rejected' ? $request->alasan : null // Hanya diisi jika ditolak
+    ]);
+
+    return response()->json(['message' => 'Status berhasil diperbarui.']);
+}
+
 
     public function cancel($id)
     {
